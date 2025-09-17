@@ -1,0 +1,22 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from schema.user import UserCreate, UserRead
+from typing import Annotated
+from services.auth import get_current_active_user
+
+router = APIRouter(
+    prefix="/users",
+    tags=["users"],
+)
+
+@router.get("/me/", response_model=UserRead)
+async def read_users_me(
+    current_user: Annotated[UserRead, Depends(get_current_active_user)],
+):
+    return current_user
+
+
+@router.get("/me/items/")
+async def read_own_items(
+    current_user: Annotated[UserRead, Depends(get_current_active_user)],
+):
+    return [{"item_id": "Foo", "owner": current_user.username}]
