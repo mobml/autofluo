@@ -5,8 +5,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from core.config import settings
 from core.security import create_access_token
 from services.auth import authenticate_user
-from services.auth import fake_users_db
-from services.auth import Token
+from schema.token import Token
+from database import get_session
+from sqlmodel import Session
 
 router = APIRouter(
     prefix="/token",
@@ -16,8 +17,9 @@ router = APIRouter(
 @router.post("/")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    session: Session = Depends(get_session),
 ) -> Token:
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    user = authenticate_user(session, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
