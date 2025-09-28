@@ -1,5 +1,6 @@
 fastapi[standard]
-sqlmodel
-psycopg2-binary
+sqlmodel==0.0.24
+psycopg2-binary==2.9.10
 pyjwt
-passlib[bcrypt]
+passlib==1.7.4
+bcrypt==4.3.0

@@ -1,0 +1,34 @@
+
+services:
+  db:
+    image: postgres
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: mobml
+      POSTGRES_PASSWORD: 2005
+      POSTGRES_DB: saas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - devnet
+    
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: fastapi dev main.py --host 0.0.0.0 --port 8000
+    depends_on:
+      - db
+    networks:
+      - devnet
+volumes:
+  postgres_data:
+
+networks:
+  devnet:
