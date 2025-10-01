@@ -5,52 +5,14 @@ import requests
 import smtplib
 from datetime import datetime
 import logging
+from nodes.trigger_nodes import ManualTrigger, ScheduleTrigger
+from nodes.base_nodes import BaseNode, NodeType, NodeExecutionError
+from context import ExecutionContext
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class NodeType(Enum):
-    TRIGGER = "trigger"
-    HTTPREQUEST = "http_request"
-    TRANSFORM = "transform"
-    SENDEMAIL = "send_email"
-
-class ExecutionContext:
-    def __init__(self):
-        self.data: Dict[str, Any] = {}
-        self.history: List[str] = []
-        self.errors: List[str] = []
-
-    def add_error(self, error: str):
-        self.errors.append(error)
-        logger.error(error)
-
-class NodeExecutionError(Exception):
-    """Custom exception for node execution errors"""
-    pass
-
-class BaseNode(ABC):
-    def __init__(self, name: str, parameters: Dict[str, Any]):
-        self.name = name
-        self.parameters = parameters
-
-    @abstractmethod
-    def execute(self, context: ExecutionContext) -> Any:
-        pass
-
-    def validate_parameters(self) -> bool:
-        """Override this method to add parameter validation"""
-        return True
-
-class TriggerNode(BaseNode):
-    def __init__(self, name: str, parameters: Dict[str, Any]):
-        super().__init__(name, parameters)
-        self.type = NodeType.TRIGGER
-
-    def execute(self, context: ExecutionContext) -> bool:
-        logger.info("Trigger node activated")
-        return True
 
 class HttpRequestNode(BaseNode):
     def __init__(self, name: str, parameters: Dict[str, Any]):
@@ -149,8 +111,14 @@ class Workflow:
         executed: List[str] = []
 
         # Find trigger nodes to start execution
-        trigger_nodes = [node for node in self.nodes if isinstance(node, TriggerNode)]
-        execution_queue.extend(trigger_nodes)
+        trigger_nodes = [node for node in self.nodes if node.type == NodeType.TRIGGER]
+        
+        # Check which triggers should execute
+        for trigger in trigger_nodes:
+            result = trigger.execute(self.context)
+            if result:  # Only add to execution queue if trigger fired
+                execution_queue.extend(self.connections.get(trigger.name, []))
+                self.context.data = result
 
         while execution_queue:
             current_node = execution_queue.pop(0)
@@ -172,25 +140,39 @@ class Workflow:
         logger.info("Workflow execution completed")
         return self.context
 
-# Example usage
+# Example workflow creation
 def create_sample_workflow() -> Workflow:
     workflow = Workflow(name="Sample Workflow")
 
-    # Create nodes
-    trigger = TriggerNode("trigger", {})
-    http = HttpRequestNode("http_request", {"url": "https://jsonplaceholder.typicode.com/posts/1"})
-    transform = TransformNode("transform", {"operation": "extract_field", "field": "title"})
-    email1 = EmailNode("send_email", {"to": "example@gmail.com"})
-    email2 = EmailNode("send_email_2", {"to": "example2@gmail.com"})
+    # Create different types of triggers
+    manual_trigger = ManualTrigger("manual_trigger", {})
+    
+    schedule_trigger = ScheduleTrigger("daily_trigger", {
+        "schedule_type": "cron",
+        "cron_expression": "0 9 * * *",  # Every day at 9 AM
+        "timezone": "UTC"
+    })
 
+    interval_trigger = ScheduleTrigger("interval_trigger", {
+        "schedule_type": "interval",
+        "interval_minutes": 15,  # Every 15 minutes
+        "timezone": "UTC"
+    })
+
+    http = HttpRequestNode("http_request", {
+        "url": "https://jsonplaceholder.typicode.com/posts/1"
+    })
+    
     # Add nodes to workflow
-    for node in [trigger, http, transform, email1, email2]:
-        workflow.add_node(node)
+    workflow.add_node(manual_trigger)
+    workflow.add_node(schedule_trigger)
+    workflow.add_node(interval_trigger)
+    workflow.add_node(http)
 
     # Set up connections
-    workflow.add_connection("trigger", [http])
-    workflow.add_connection("http_request", [email2, transform])
-    workflow.add_connection("transform", [email1])
+    workflow.add_connection("manual_trigger", [http])
+    workflow.add_connection("daily_trigger", [http])
+    workflow.add_connection("interval_trigger", [http])
 
     return workflow
 
