@@ -9,15 +9,21 @@ def create_sample_workflow() -> Workflow:
     # Create different types of triggers
     manual_trigger = ManualTrigger("manual_trigger", {})
     
-    schedule_trigger = ScheduleTrigger("daily_trigger", {
+    schedule_trigger = ScheduleTrigger("cron_trigger", {
         "schedule_type": "cron",
-        "cron_expression": "0 9 * * *",  # Every day at 9 AM
+        "cron_expression": "*/2 * * * *",  # Every two minutes
         "timezone": "UTC"
     })
 
     interval_trigger = ScheduleTrigger("interval_trigger", {
         "schedule_type": "interval",
-        "interval_minutes": 1,  # Every 15 minutes
+        "interval_minutes": 1,  # Every 1 minute
+        "timezone": "UTC"
+    })
+
+    interval_trigger_2 = ScheduleTrigger("interval_trigger_2_min", {
+        "schedule_type": "interval",
+        "interval_minutes": 2,  # Every 2 minutes
         "timezone": "UTC"
     })
 
@@ -27,14 +33,16 @@ def create_sample_workflow() -> Workflow:
     
     # Add nodes to workflow
     workflow.add_node(manual_trigger)
-    workflow.add_node(schedule_trigger)
+    #workflow.add_node(schedule_trigger)
     workflow.add_node(interval_trigger)
+    workflow.add_node(interval_trigger_2)
     workflow.add_node(http)
 
     # Set up connections
     workflow.add_connection("manual_trigger", [http])
-    workflow.add_connection("daily_trigger", [http])
+    #workflow.add_connection("cron_trigger", [http])
     workflow.add_connection("interval_trigger", [http])
+    workflow.add_connection("interval_trigger_2_min", [http])
 
     return workflow
 
@@ -45,10 +53,11 @@ if __name__ == "__main__":
     scheduler.register_workflow(workflow)
     scheduler.start()
 
+    workflow.execute()  # Initial manual run
     try: 
         while True:
             pass  # Keep the main thread alive
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
     
-    result = workflow.execute()
+    #result = workflow.execute()

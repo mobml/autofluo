@@ -41,7 +41,7 @@ class WorkflowScheduler:
 
     def run_workflow(self, workflow: Workflow, trigger_name: str):
         logger.info(f"Executing scheduled workflow {workflow.name} via {trigger_name}")
-        workflow.execute()
+        workflow.execute(trigger_name=trigger_name)
 
     def start(self):
         logger.info("Starting workflow scheduler...")

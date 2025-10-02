@@ -3,6 +3,7 @@ import requests
 import logging
 from nodes.base_nodes import BaseNode, NodeType, NodeExecutionError
 from context import ExecutionContext
+from nodes.trigger_nodes import TriggerType
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -100,20 +101,35 @@ class Workflow:
     def add_connection(self, from_node: str, to_nodes: List[BaseNode]) -> None:
         self.connections[from_node] = to_nodes
 
-    def execute(self) -> ExecutionContext:
+    def execute(self, trigger_name: str = None) -> ExecutionContext:
         logger.info(f"Starting workflow execution: {self.name}")
         execution_queue: List[BaseNode] = []
         executed: List[str] = []
 
-        # Find trigger nodes to start execution
-        trigger_nodes = [node for node in self.nodes if node.type == NodeType.TRIGGER]
-        
-        # Check which triggers should execute
-        for trigger in trigger_nodes:
-            result = trigger.execute(self.context)
-            if result:  # Only add to execution queue if trigger fired
-                execution_queue.extend(self.connections.get(trigger.name, []))
+        if trigger_name:
+            trigger_node = self.get_node(trigger_name)
+            if not trigger_node:
+                self.context.add_error(f"Trigger node {trigger_name} not found")
+                return self.context
+            
+            logger.info(f"Executing workflow '{self.name}' from external trigger: {trigger_name}")
+            result = trigger_node.execute(self.context)
+            if result:
                 self.context.data = result
+                execution_queue.extend(self.connections.get(trigger_node.name, []))
+        else:
+        # Manual execution (user clicks run)
+            trigger_nodes = [
+                node for node in self.nodes
+                if node.type == NodeType.TRIGGER and getattr(node, "trigger_type", None) == TriggerType.MANUAL
+            ]
+            for trigger in trigger_nodes:
+                logger.info(f"Firing manual trigger: {trigger.name}")
+                result = trigger.execute(self.context)
+                if result:
+                    self.context.data = result
+                    execution_queue.extend(self.connections.get(trigger.name, []))
+
 
         while execution_queue:
             current_node = execution_queue.pop(0)
