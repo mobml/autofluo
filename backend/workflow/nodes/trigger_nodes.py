@@ -22,25 +22,16 @@ class BaseTrigger(BaseNode):
         self.type = NodeType.TRIGGER
         self.trigger_type = trigger_type
 
-    @abstractmethod
-    def should_trigger(self, context: ExecutionContext) -> bool:
-        pass
-
 class ManualTrigger(BaseTrigger):
     def __init__(self, name: str, parameters: Dict[str, Any]):
         super().__init__(name, TriggerType.MANUAL, parameters)
 
-    def should_trigger(self, context: ExecutionContext) -> bool:
-        return True
-
     def execute(self, context: ExecutionContext) -> Dict[str, Any]:
         logger.info("Manual trigger activated")
-        if self.should_trigger(context):
-            return {
-                "trigger_type": "manual",
-                "timestamp": datetime.now().isoformat()
-            }
-        return {}
+        return {
+            "trigger_type": "manual",
+            "timestamp": datetime.now().isoformat()
+        }
 
 class ScheduleTrigger(BaseTrigger):
     def __init__(self, name: str, parameters: Dict[str, Any]):
@@ -62,36 +53,13 @@ class ScheduleTrigger(BaseTrigger):
             if "interval_minutes" not in self.parameters:
                 raise NodeExecutionError("interval_minutes is required for interval schedule")
 
-    def should_trigger(self, context: ExecutionContext) -> bool:
-        now = datetime.now(pytz.timezone(self.timezone))
-        
-        if self.last_execution is None:
-            self.last_execution = now
-            return True
-
-        schedule_type = self.parameters["schedule_type"]
-        
-        if schedule_type == "cron":
-            cron = croniter(self.parameters["cron_expression"], self.last_execution)
-            next_execution = cron.get_next(datetime)
-            return now >= next_execution
-            
-        elif schedule_type == "interval":
-            interval_minutes = self.parameters["interval_minutes"]
-            time_diff = (now - self.last_execution).total_seconds() / 60
-            return time_diff >= interval_minutes
-            
-        return False
-
     def execute(self, context: ExecutionContext) -> Dict[str, Any]:
         logger.info("Schedule trigger activated")
-        if self.should_trigger(context):
-            now = datetime.now(pytz.timezone(self.timezone))
-            self.last_execution = now
-            return {
-                "trigger_type": "schedule",
-                "schedule_type": self.parameters["schedule_type"],
-                "timestamp": now.isoformat(),
-                "timezone": self.timezone
-            }
-        return {}
+        now = datetime.now(pytz.timezone(self.timezone))
+        self.last_execution = now
+        return {
+            "trigger_type": "schedule",
+            "schedule_type": self.parameters["schedule_type"],
+            "timestamp": now.isoformat(),
+            "timezone": self.timezone
+        }
