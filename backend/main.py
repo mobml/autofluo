@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from routes import users, auth
+from app.api.v1 import auth
+from app.api.v1 import users
 # to get a string like this run:
 # openssl rand -hex 32
 
