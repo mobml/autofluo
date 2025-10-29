@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from schema.user import UserRead
+from app.schemas.user import UserRead
 
 class Token(BaseModel):
     access_token: str

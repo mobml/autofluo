@@ -1,4 +1,4 @@
-from schema.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead
 from sqlalchemy.orm import Session
 from core.security import get_password_hash
 from models.user import User

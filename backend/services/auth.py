@@ -7,7 +7,7 @@ from core.config import settings
 from passlib.context import CryptContext
 from sqlmodel import Session
 from database import get_session
-from schema.token import TokenData
+from app.schemas.token import TokenData
 from services.user_service import get_user_by_username
 from models.user import User
 import jwt

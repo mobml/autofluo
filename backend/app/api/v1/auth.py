@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from core.config import settings
 from core.security import create_access_token
 from services.auth import authenticate_user
-from schema.token import Token
+from app.schemas.token import Token
 from database import get_session
 from sqlmodel import Session
 

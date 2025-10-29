@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from schema.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead
 from typing import Annotated
 from services.auth import get_current_active_user
 from services import user_service
