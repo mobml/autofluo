@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.security import create_access_token
 from services.auth import authenticate_user
 from services.user_service import UserService
-from repository.user_repository import UserRepository
+from app.repository.user_repository import UserRepository
 from app.schemas.token import Token
 from database import get_session
 from sqlmodel import Session
