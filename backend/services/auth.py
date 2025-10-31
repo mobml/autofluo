@@ -1,9 +1,9 @@
-from core.security import verify_password
+from app.core.security import verify_password
 from fastapi import Depends, HTTPException, status
 from typing import Annotated
 from jwt.exceptions import InvalidTokenError
 from fastapi.security import OAuth2PasswordBearer
-from core.config import settings
+from app.core.config import settings
 from passlib.context import CryptContext
 from sqlmodel import Session
 from database import get_session
