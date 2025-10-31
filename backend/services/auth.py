@@ -10,7 +10,7 @@ from database import get_session
 from app.schemas.token import TokenData
 from services.user_service import UserService
 from repository.user_repository import UserRepository
-from models.user import User
+from app.models.user import User
 import jwt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
