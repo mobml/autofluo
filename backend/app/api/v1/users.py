@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.user import UserCreate, UserRead
 from typing import Annotated
-from services.auth import get_current_active_user
+from app.services.auth import get_current_active_user
 from sqlmodel import Session
 from database import get_session
 from app.repository.user_repository import UserRepository
-from services.user_service import UserService
+from app.services.user_service import UserService
 
 router = APIRouter(
     prefix="/users",

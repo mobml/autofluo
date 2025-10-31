@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from sqlmodel import Session
 from database import get_session
 from app.schemas.token import TokenData
-from services.user_service import UserService
+from app.services.user_service import UserService
 from app.repository.user_repository import UserRepository
 from app.models.user import User
 import jwt

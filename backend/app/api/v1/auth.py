@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from app.core.config import settings
 from app.core.security import create_access_token
-from services.auth import authenticate_user
-from services.user_service import UserService
+from app.services.auth import authenticate_user
+from app.services.user_service import UserService
 from app.repository.user_repository import UserRepository
 from app.schemas.token import Token
 from database import get_session
