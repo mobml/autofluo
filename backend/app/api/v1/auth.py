@@ -2,9 +2,11 @@ from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from core.config import settings
-from core.security import create_access_token
+from app.core.config import settings
+from app.core.security import create_access_token
 from services.auth import authenticate_user
+from services.user_service import UserService
+from repository.user_repository import UserRepository
 from app.schemas.token import Token
 from database import get_session
 from sqlmodel import Session
@@ -14,12 +16,16 @@ router = APIRouter(
     tags=["auth"],
 )
 
+def get_user_service(session: Session = Depends(get_session)) -> UserService:
+    repo = UserRepository(session)
+    return UserService(repo)
+
 @router.post("/")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    session: Session = Depends(get_session),
+    user_service: UserService = Depends(get_user_service),
 ) -> Token:
-    user = authenticate_user(session, form_data.username, form_data.password)
+    user = authenticate_user(form_data.username, form_data.password, user_service)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -8,23 +8,35 @@ from passlib.context import CryptContext
 from sqlmodel import Session
 from database import get_session
 from app.schemas.token import TokenData
-from services.user_service import get_user_by_username
+from services.user_service import UserService
+from repository.user_repository import UserRepository
 from models.user import User
 import jwt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+def get_user_service(session: Session = Depends(get_session)) -> UserService:
+    user_repo = UserRepository(session)
+    return UserService(user_repo)
 
-def authenticate_user(session: Session, username: str, password: str) -> User | bool:
-    user = get_user_by_username(session, username)
+
+def authenticate_user(
+        username: str, 
+        password: str,
+        user_service: UserService
+) -> User | bool:
+    user = user_service.get_user_by_username(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
         return False
     return user
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: Session = Depends(get_session)):
+async def get_current_user(
+        token: Annotated[str, Depends(oauth2_scheme)], 
+        user_service: UserService = Depends(get_user_service),
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -38,7 +50,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], sessio
         token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user_by_username(session, username=token_data.username)
+    user = user_service.get_user_by_username(username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
