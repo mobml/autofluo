@@ -6,19 +6,13 @@ from app.core.config import settings
 from app.core.security import create_access_token
 from app.services.auth import authenticate_user
 from app.services.user_service import UserService
-from app.repository.user_repository import UserRepository
+from app.api.dependencies import get_user_service
 from app.schemas.token import Token
-from database import get_session
-from sqlmodel import Session
 
 router = APIRouter(
     prefix="/token",
     tags=["auth"],
 )
-
-def get_user_service(session: Session = Depends(get_session)) -> UserService:
-    repo = UserRepository(session)
-    return UserService(repo)
 
 @router.post("/")
 async def login_for_access_token(

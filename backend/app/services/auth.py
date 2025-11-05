@@ -5,21 +5,14 @@ from jwt.exceptions import InvalidTokenError
 from fastapi.security import OAuth2PasswordBearer
 from app.core.config import settings
 from passlib.context import CryptContext
-from sqlmodel import Session
-from database import get_session
 from app.schemas.token import TokenData
 from app.services.user_service import UserService
-from app.repository.user_repository import UserRepository
+from app.api.dependencies import get_user_service
 from app.models.user import User
 import jwt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-def get_user_service(session: Session = Depends(get_session)) -> UserService:
-    user_repo = UserRepository(session)
-    return UserService(user_repo)
-
 
 def authenticate_user(
         username: str, 

@@ -2,19 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.user import UserCreate, UserRead
 from typing import Annotated
 from app.services.auth import get_current_active_user
-from sqlmodel import Session
-from database import get_session
-from app.repository.user_repository import UserRepository
 from app.services.user_service import UserService
+from app.api.dependencies import get_user_service
 
 router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
-
-def get_user_service(session: Session = Depends(get_session)) -> UserService:
-    repo = UserRepository(session)
-    return UserService(repo)
 
 @router.get("/me/", response_model=UserRead)
 async def read_users_me(
