@@ -1,6 +1,7 @@
 from scheduler import WorkflowScheduler
-from workflow_engine import Workflow, HttpRequestNode
+from workflow_engine import Workflow
 from nodes.trigger_nodes import ManualTrigger, ScheduleTrigger
+from nodes.http_nodes import HttpRequestNode
 
 # Example workflow creation
 def create_sample_workflow() -> Workflow:

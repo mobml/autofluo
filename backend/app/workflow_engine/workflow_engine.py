@@ -9,31 +9,6 @@ from nodes.trigger_nodes import TriggerType
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-class HttpRequestNode(BaseNode):
-    def __init__(self, name: str, parameters: Dict[str, Any]):
-        super().__init__(name, parameters)
-        self.type = NodeType.HTTPREQUEST
-        
-    def validate_parameters(self) -> bool:
-        return "url" in self.parameters
-
-    def execute(self, context: ExecutionContext) -> Any:
-        if not self.validate_parameters():
-            raise NodeExecutionError("URL parameter is required")
-            
-        url = self.parameters["url"]
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            result = response.json()
-            logger.info(f"GET request to {url} successful")
-            return result
-        except Exception as e:
-            error_msg = f"HTTP request failed: {str(e)}"
-            context.add_error(error_msg)
-            return {}
-
 class TransformNode(BaseNode):
     VALID_OPERATIONS = ["uppercase", "extract_field"]
 
