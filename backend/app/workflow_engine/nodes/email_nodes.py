@@ -3,6 +3,7 @@ import logging
 from typing import Dict, Any
 from nodes.base_nodes import BaseNode, NodeType, NodeExecutionError
 from context import ExecutionContext
+from jinja2 import Template
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +19,26 @@ class SendEmailNode(BaseNode):
                 raise NodeExecutionError(f"Missing required parameter: {param}")
         return True
 
+    def _render(self, template_str: str, context: ExecutionContext) -> str:
+        """
+        Rindea texto usando variables guardadas en el contexto.
+        Ejemplo: "Hola {{ GetTodo.body.title }}"
+        """
+        try:
+            template = Template(template_str)
+            return template.render(**context.data)
+        except Exception as e:
+            raise NodeExecutionError(f"Template rendering failed: {e}")
+
     def execute(self, context: ExecutionContext) -> Dict[str, Any]:
         self.validate_parameters()
 
         from_email = self.parameters["from_email"]
         app_password = self.parameters["app_password"]
         to = self.parameters["to"]
-        subject = self.parameters["subject"]
-        body = self.parameters["body"]
+
+        subject = self._render(self.parameters["subject"], context)
+        body = self._render(self.parameters["body"], context)
 
         logger.info(f"[EMAIL] Sending Gmail message to {to}")
 
@@ -40,7 +53,9 @@ class SendEmailNode(BaseNode):
         result = {
             "success": True,
             "provider": "gmail",
-            "sent_to": to
+            "sent_to": to,
+            "subject": subject,
+            "body": body
         }
 
         context.set(self.name, result)

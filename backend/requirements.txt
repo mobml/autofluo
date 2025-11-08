@@ -9,3 +9,4 @@ croniter
 pytz
 APScheduler
 yagmail
+jinja2
