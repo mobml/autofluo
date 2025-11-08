@@ -90,7 +90,6 @@ class Workflow:
             logger.info(f"Executing workflow '{self.name}' from external trigger: {trigger_name}")
             result = trigger_node.execute(self.context)
             if result:
-                self.context.data = result
                 execution_queue.extend(self.connections.get(trigger_node.name, []))
         else:
         # Manual execution (user clicks run)
@@ -102,7 +101,6 @@ class Workflow:
                 logger.info(f"Firing manual trigger: {trigger.name}")
                 result = trigger.execute(self.context)
                 if result:
-                    self.context.data = result
                     execution_queue.extend(self.connections.get(trigger.name, []))
 
 
@@ -111,7 +109,7 @@ class Workflow:
             if current_node.name not in executed:
                 try:
                     logger.info(f"Executing node: {current_node.name}")
-                    self.context.data = current_node.execute(self.context)
+                    current_node.execute(self.context)
                     executed.append(current_node.name)
 
                     # Add connected nodes to the queue
