@@ -1,38 +1,47 @@
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from croniter import croniter
+
 
 class InvalidTrigger(Exception):
     pass
+
 
 class TriggerType(Enum):
     MANUAL = "manual"
     CRON = "cron"
     INTERVAL = "interval"
 
-@dataclass(frozen=True)
+
+@dataclass
 class Trigger:
-    def __init__(self, type: TriggerType):
-        self.type = type
+    type: TriggerType = field(init=False)
 
-@dataclass(frozen=True)
+
+@dataclass
 class ManualTrigger(Trigger):
-    def __init__(self):
-        super().__init__(TriggerType.MANUAL)
+    def __post_init__(self):
+        self.type = TriggerType.MANUAL
 
-@dataclass(frozen=True)
+
+@dataclass
 class CronTrigger(Trigger):
-    def __init__(self, cron_expression: str, timezone: str = "UTC"):
+    cron_expression: str
+    timezone: str = "UTC"
 
-        if not croniter.is_valid(cron_expression):
+    def __post_init__(self):
+        if not croniter.is_valid(self.cron_expression):
             raise InvalidTrigger("Invalid cron expression")
 
-        super().__init__(TriggerType.CRON)
-        self.cron_expression = cron_expression
-        self.timezone = timezone
+        self.type = TriggerType.CRON
 
-@dataclass(frozen=True)
+
+@dataclass
 class IntervalTrigger(Trigger):
-    def __init__(self, interval_minutes: int):
-        super().__init__(TriggerType.INTERVAL)
-        self.interval_minutes = interval_minutes
+    interval_minutes: int
+
+    def __post_init__(self):
+        if self.interval_minutes <= 0:
+            raise InvalidTrigger("Interval must be positive")
+
+        self.type = TriggerType.INTERVAL
